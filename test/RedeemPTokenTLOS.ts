@@ -96,6 +96,8 @@ describe("RedeemPTokenTLOS", function () {
             const allowance = await ptokenTLOS.read.allowance([otherAccount.account.address, redeem.address]);
             expect(allowance).to.equal(halfAmount, "Allowance is incorrect");
 
+            //await expect(redeem.write.redeem([fullAmount], { account: otherAccount.account }))
+            //    .to.be.rejectedWith(/PToken TLOS transfer failed/);
             let failed = false;
             try {
                 const redeemFailHash = await redeem.write.redeem([fullAmount]);
@@ -119,10 +121,6 @@ describe("RedeemPTokenTLOS", function () {
             expect(contractPtokenBalanceAfter).to.equal(halfAmount, "Contract ptoken balance is incorrect");
 
             const ptokenBalanceAfter = await ptokenTLOS.read.balanceOf([otherAccount.account.address]);
-            console.log("Full Amount:", fullAmount.toString());
-            console.log("Half Amount:", halfAmount.toString());
-            console.log("pToken Balance Before Redeem:", ptokenBalance.toString());
-            console.log("pToken Balance After Redeem:", ptokenBalanceAfter.toString());
             expect(ptokenBalanceAfter).to.equal(halfAmount, "PToken balance is incorrect after successful redeem");
 
             const oftBalanceAfter = await oftTLOS.read.balanceOf([otherAccount.account.address]);
