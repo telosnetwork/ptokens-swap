@@ -19,10 +19,11 @@
 
     <!-- Balance and Swap -->
     <div v-if="connected && !chainUnsupported">
-      <div>Your pTLOS Balance: {{ balance }} pTLOS</div>
+      <div>Your pTokens TLOS Balance: {{ pTokenBalance }} TLOS</div>
+      <div>Your OFT TLOS Balance: {{ oftTokenBalance }} TLOS</div>
       <q-btn
         class="q-mt-md"
-        :disable="balance === '0.0' || swapping"
+        :disable="pTokenBalance === '0.0' || swapping"
         @click="swapTokens"
         label="Swap pTLOS for OFT TLOS"
         color="secondary"
@@ -40,8 +41,9 @@ import ERC20ABI from 'src/contracts/MockERC20.json'
 import { useQuasar } from 'quasar'
 
 // Environment Variables
-const pTokenAddress = import.meta.env.VITE_PTOKEN_TLOS_ADDRESS
-const redeemAddress = import.meta.env.VITE_REDEEM_CONTRACT_ADDRESS
+const oftTokenAddress = import.meta.env.VITE_OFTTELOS_CONTRACT
+const pTokenAddress = import.meta.env.VITE_PTLOS_CONTRACT
+const redeemAddress = import.meta.env.VITE_REDEEMER_CONTRACT
 
 const $q = useQuasar()
 const { disconnect } = useDisconnect()
@@ -54,15 +56,20 @@ const chainUnsupported = computed(() => {
   return connected.value && chain.value && ![1,56].includes(chain.value.id)
 })
 
-const balance = ref('0.0')
+const pTokenBalance = ref('0.0')
+const oftTokenBalance = ref('0.0')
 const swapping = ref(false)
 
 async function fetchBalance() {
   if (!connected.value || chainUnsupported.value) return
   const provider = new ethers.BrowserProvider(window.ethereum)
-  const erc20 = new ethers.Contract(pTokenAddress, ERC20ABI.abi, provider)
-  const bal = await erc20.balanceOf(address.value)
-  balance.value = ethers.formatUnits(bal, 18)
+  debugger;
+  const pTokenErc20 = new ethers.Contract(pTokenAddress, ERC20ABI.abi, provider)
+  const oftTokenErc20 = new ethers.Contract(oftTokenAddress, ERC20ABI.abi, provider)
+  const pTokenBal = await pTokenErc20.balanceOf(address.value)
+  const oftTokenBal = await oftTokenErc20.balanceOf(address.value)
+  pTokenBalance.value = ethers.formatUnits(pTokenBal, 18)
+  oftTokenBal.value = ethers.formatUnits(oftTokenBal, 18)
 }
 
 async function swapTokens() {
@@ -70,7 +77,7 @@ async function swapTokens() {
     $q.notify({ type: 'negative', message: 'Please connect wallet on Ethereum or BSC.' })
     return
   }
-  if (balance.value === '0.0') return
+  if (pTokenBalance.value === '0.0') return
 
   try {
     swapping.value = true
@@ -80,7 +87,7 @@ async function swapTokens() {
     const redeemContract = new ethers.Contract(redeemAddress, RedeemABI.abi, signer)
 
     // Decide how much to swap. For simplicity, swap half the balance
-    const halfBal = ethers.parseUnits((Number(balance.value) / 2).toString(), 18)
+    const halfBal = ethers.parseUnits((Number(pTokenBalance.value) / 2).toString(), 18)
 
     // Approve Redeem contract to spend pTLOS
     let tx = await erc20.approve(redeemAddress, halfBal)
