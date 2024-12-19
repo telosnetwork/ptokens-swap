@@ -57,9 +57,10 @@ export default defineConfig((/* ctx */) => {
       // publicPath: '/',
       // analyze: true,
       env: {
-        VITE_PTLOS_CONTRACT: '0x8289489afb035c4abd5a01ca9e6272480eeeea55',
-        VITE_OFTTELOS_CONTRACT: '0x9db0209270947a780bfd825f805a5b6a30ef3f42',
-        VITE_REDEEMER_CONTRACT: '0x53046dba0825e84c0c0eeff90737f8b66441d7ca',
+        PTLOS_CONTRACT: '0x8289489afb035c4abd5a01ca9e6272480eeeea55',
+        OFTTELOS_CONTRACT: '0x9db0209270947a780bfd825f805a5b6a30ef3f42',
+        REDEEMER_CONTRACT: '0x53046dba0825e84c0c0eeff90737f8b66441d7ca',
+        WALLETCONNECT_PROJECT_ID: '14ec76c44bae7d461fa0f5fd5f8a9da1'
       },
       // rawDefine: {}
       // ignorePublicFolder: true,
@@ -102,7 +103,9 @@ export default defineConfig((/* ctx */) => {
       // directives: [],
 
       // Quasar plugins
-      plugins: []
+      plugins: [
+        'Notify'
+      ]
     },
 
     // animations: 'all', // --- includes all animations

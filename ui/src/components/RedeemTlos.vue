@@ -19,8 +19,13 @@
 
     <!-- Balance and Swap -->
     <div v-if="connected && !chainUnsupported">
+      <div>Currently connected to: {{ chainName }}</div>
       <div>Your pTokens TLOS Balance: {{ pTokenBalance }} TLOS</div>
       <div>Your OFT TLOS Balance: {{ oftTokenBalance }} TLOS</div>
+      <div>Redeemable OFT TLOS: {{ redeemableOftBalance }} TLOS</div>
+      <div>Amount to swap (minus fees): {{ amountReceived }} TLOS</div>
+      <div>Approval hash: {{ approvalHash }}</div>
+      <div>Swap hash: {{ swapHash }}</div>
       <q-btn
         class="q-mt-md"
         :disable="pTokenBalance === '0.0' || swapping"
@@ -33,46 +38,84 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { useDisconnect, useAccount } from '@wagmi/vue'
-import { ethers } from 'ethers'
+import { formatUnits, parseEther } from 'viem'
+import { ref, computed } from 'vue'
+import { useConnectorClient, useReadContract, useDisconnect, useAccount, useWriteContract } from '@wagmi/vue'
+
 import RedeemABI from 'src/contracts/RedeemPTokenTLOS.json'
 import ERC20ABI from 'src/contracts/MockERC20.json'
 import { useQuasar } from 'quasar'
 
 // Environment Variables
-const oftTokenAddress = import.meta.env.VITE_OFTTELOS_CONTRACT
-const pTokenAddress = import.meta.env.VITE_PTLOS_CONTRACT
-const redeemAddress = import.meta.env.VITE_REDEEMER_CONTRACT
+const oftTokenAddress = String(process.env.OFTTELOS_CONTRACT)
+const pTokenAddress = String(process.env.PTLOS_CONTRACT)
+const redeemAddress = String(process.env.REDEEMER_CONTRACT)
 
 const $q = useQuasar()
 const { disconnect } = useDisconnect()
 const { chain, address, isConnected } = useAccount()
+const { writeContractAsync } = useWriteContract()
+const { data: client } = useConnectorClient()
 
 // State
 const connected = computed(() => isConnected.value && !!address.value)
 const chainUnsupported = computed(() => {
   // For simplicity, only allow Ethereum mainnet (chainId 1) or BSC (chainId 56)
-  return connected.value && chain.value && ![1,56].includes(chain.value.id)
+  return connected.value && chain.value && ![1,56, 41].includes(chain.value.id)
+})
+const chainName = computed(() => {
+  if (chain.value) {
+    return chain.value.name + (chain.value.testnet ? ' Testnet' : '')
+  }
+  return ''
 })
 
-const pTokenBalance = ref('0.0')
-const oftTokenBalance = ref('0.0')
-const swapping = ref(false)
+const pTokenBalanceCall = useReadContract({
+  abi: ERC20ABI.abi,
+  address: pTokenAddress,
+  functionName: 'balanceOf',
+  args: [address]
+})
 
-async function fetchBalance() {
-  if (!connected.value || chainUnsupported.value) return
-  const provider = new ethers.BrowserProvider(window.ethereum)
-  debugger;
-  const pTokenErc20 = new ethers.Contract(pTokenAddress, ERC20ABI.abi, provider)
-  const oftTokenErc20 = new ethers.Contract(oftTokenAddress, ERC20ABI.abi, provider)
-  const pTokenBal = await pTokenErc20.balanceOf(address.value)
-  const oftTokenBal = await oftTokenErc20.balanceOf(address.value)
-  pTokenBalance.value = ethers.formatUnits(pTokenBal, 18)
-  oftTokenBal.value = ethers.formatUnits(oftTokenBal, 18)
+const oftTokenBalanceCall = useReadContract({
+  abi: ERC20ABI.abi,
+  address: oftTokenAddress,
+  functionName: 'balanceOf',
+  args: [address]
+})
+
+const redeemableOftBalanceCall = useReadContract({
+  abi: ERC20ABI.abi,
+  address: oftTokenAddress,
+  functionName: 'balanceOf',
+  args: [redeemAddress]
+})
+
+const pTokenBalance = computed(() => formatOrZero(pTokenBalanceCall))
+const oftTokenBalance = computed(() => formatOrZero(oftTokenBalanceCall))
+const redeemableOftBalance = computed(() => formatOrZero(redeemableOftBalanceCall))
+const amountReceived = computed(() => {
+  if (pTokenBalanceCall?.data?.value && oftTokenBalanceCall?.data?.value) {
+    const amountLessFee = Math.min(pTokenBalanceCall.value, oftTokenBalanceCall.value) * 0.9975
+    return formatUnits(amountLessFee, 18)
+  }
+
+  return '0.0'
+})
+
+const formatOrZero = (value: UseReadContractReturnType) => {
+  if (!value || !value.isFetched || !value.data || !value.data.value) {
+    return '0.0'
+  }
+
+  return formatUnits(value.data.value as bigint, 18)
 }
 
-async function swapTokens() {
+const swapping = ref(false)
+const approvalHash = ref('')
+const swapHash = ref('')
+
+const swapTokens = async () => {
   if (!connected.value || chainUnsupported.value) {
     $q.notify({ type: 'negative', message: 'Please connect wallet on Ethereum or BSC.' })
     return
@@ -81,44 +124,62 @@ async function swapTokens() {
 
   try {
     swapping.value = true
-    const provider = new ethers.BrowserProvider(window.ethereum)
-    const signer = await provider.getSigner()
-    const erc20 = new ethers.Contract(pTokenAddress, ERC20ABI.abi, signer)
-    const redeemContract = new ethers.Contract(redeemAddress, RedeemABI.abi, signer)
+    // TODO: Calculate based on available OFT balance of redeem contract
+    let amountToSwap = parseEther('1')
+    let approveResult = await writeContractAsync({
+      abi: ERC20ABI.abi,
+      address: pTokenAddress,
+      functionName: 'approve',
+      args: [redeemAddress, amountToSwap]
+    })
+    approvalHash.value = approveResult
+    // debugger
+    // await client.waitForTransactionReceipt({
+    //   hash: approveResult,
+    //   confirmations: 1,
+    //   pollInterval: 1000
+    // })
+    //
+    // // TODO: Check for confimrations/receipt before doing swap
+    // let sendResult = await writeContractAsync({
+    //   abi: RedeemABI.abi,
+    //   address: redeemAddress,
+    //   functionName: 'redeem',
+    //   args: [amountToSwap]
+    // })
+    // swapHash.value = sendResult
+    // await client.waitForTransactionReceipt({
+    //   hash: sendResult,
+    //   confirmations: 1,
+    //   pollInterval: 1000
+    // })
 
-    // Decide how much to swap. For simplicity, swap half the balance
-    const halfBal = ethers.parseUnits((Number(pTokenBalance.value) / 2).toString(), 18)
-
-    // Approve Redeem contract to spend pTLOS
-    let tx = await erc20.approve(redeemAddress, halfBal)
-    await tx.wait()
-
-    // Call redeem function
-    tx = await redeemContract.redeem(halfBal)
-    await tx.wait()
-
+    pTokenBalanceCall.refetch()
+    oftTokenBalanceCall.refetch()
+    redeemableOftBalanceCall.refetch()
     $q.notify({ type: 'positive', message: 'Swap successful!' })
-    await fetchBalance()
+    // await fetchBalance()
   } catch (err) {
     console.error(err)
-    $q.notify({ type: 'negative', message: 'Swap failed.' })
+    $q.notify({ type: 'negative', message: `Swap failed for unknown reason` })
   } finally {
     swapping.value = false
   }
 }
 
-onMounted(() => {
-  if (connected.value && !chainUnsupported.value) {
-    fetchBalance()
-  }
-})
-
+// onMounted(() => {
+//   if (connected.value && !chainUnsupported.value) {
+//     fetchBalance()
+//   }
+// })
+//
 // Refetch balance when chain or address changes
-watch([connected, chainUnsupported, address, () => chain.value?.id], () => {
-  if (connected.value && !chainUnsupported.value) {
-    fetchBalance()
-  } else {
-    balance.value = '0.0'
-  }
-})
+// watch([connected, chainUnsupported, address, () => chain.value?.id], () => {
+//   if (connected.value && !chainUnsupported.value) {
+//     fetchBalance()
+//   } else {
+//     pTokenBalance.value = '0.0'
+//     oftTokenBalance.value = '0.0'
+//   }
+// })
 </script>
