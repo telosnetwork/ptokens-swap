@@ -40,7 +40,8 @@
 <script setup lang="ts">
 import { formatUnits, parseEther } from 'viem'
 import { ref, computed } from 'vue'
-import { useConnectorClient, useReadContract, useDisconnect, useAccount, useWriteContract } from '@wagmi/vue'
+import { useConfig, useReadContract, useDisconnect, useAccount, useWriteContract } from '@wagmi/vue'
+import { waitForTransactionReceipt } from '@wagmi/core'
 
 import RedeemABI from 'src/contracts/RedeemPTokenTLOS.json'
 import ERC20ABI from 'src/contracts/MockERC20.json'
@@ -55,7 +56,7 @@ const $q = useQuasar()
 const { disconnect } = useDisconnect()
 const { chain, address, isConnected } = useAccount()
 const { writeContractAsync } = useWriteContract()
-const { data: client } = useConnectorClient()
+const config = useConfig()
 
 // State
 const connected = computed(() => isConnected.value && !!address.value)
@@ -133,32 +134,32 @@ const swapTokens = async () => {
       args: [redeemAddress, amountToSwap]
     })
     approvalHash.value = approveResult
-    // debugger
-    // await client.waitForTransactionReceipt({
-    //   hash: approveResult,
-    //   confirmations: 1,
-    //   pollInterval: 1000
-    // })
-    //
-    // // TODO: Check for confimrations/receipt before doing swap
-    // let sendResult = await writeContractAsync({
-    //   abi: RedeemABI.abi,
-    //   address: redeemAddress,
-    //   functionName: 'redeem',
-    //   args: [amountToSwap]
-    // })
-    // swapHash.value = sendResult
-    // await client.waitForTransactionReceipt({
-    //   hash: sendResult,
-    //   confirmations: 1,
-    //   pollInterval: 1000
-    // })
+
+    await waitForTransactionReceipt(config, {
+      hash: approveResult,
+      confirmations: 1,
+      pollInterval: 1000
+    })
+
+    // TODO: Check for confimrations/receipt before doing swap
+    let sendResult = await writeContractAsync({
+      abi: RedeemABI.abi,
+      address: redeemAddress,
+      functionName: 'redeem',
+      args: [amountToSwap]
+    })
+    swapHash.value = sendResult
+
+    await waitForTransactionReceipt(config, {
+      hash: sendResult,
+      confirmations: 1,
+      pollInterval: 1000
+    })
 
     pTokenBalanceCall.refetch()
     oftTokenBalanceCall.refetch()
     redeemableOftBalanceCall.refetch()
     $q.notify({ type: 'positive', message: 'Swap successful!' })
-    // await fetchBalance()
   } catch (err) {
     console.error(err)
     $q.notify({ type: 'negative', message: `Swap failed for unknown reason` })
