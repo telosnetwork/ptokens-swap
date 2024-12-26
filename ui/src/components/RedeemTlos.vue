@@ -48,6 +48,7 @@ import ERC20ABI from 'src/contracts/MockERC20.json'
 import { useQuasar } from 'quasar'
 
 // Environment Variables
+// TODO: make those addresses dynamic
 const oftTokenAddress = String(process.env.OFTTELOS_CONTRACT) as Address;
 const pTokenAddress = String(process.env.PTLOS_CONTRACT) as Address;
 const redeemAddress = String(process.env.REDEEMER_CONTRACT) as Address;
@@ -95,6 +96,7 @@ const redeemableOftBalanceCall = useReadContract({
 const pTokenBalance = computed(() => formatOrZero(pTokenBalanceCall))
 const oftTokenBalance = computed(() => formatOrZero(oftTokenBalanceCall))
 const redeemableOftBalance = computed(() => formatOrZero(redeemableOftBalanceCall))
+
 const amountReceived = computed(() => {
   // pTokenBalanceCall.data y oftTokenBalanceCall.data 
   // are type Ref<bigint | undefined> according to wagmi.

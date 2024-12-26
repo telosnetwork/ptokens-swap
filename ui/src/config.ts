@@ -2,7 +2,7 @@ import {createConfig, http, injected} from '@wagmi/vue'
 import { mainnet, telosTestnet, bsc } from '@wagmi/vue/chains'
 import { metaMask, safe, walletConnect } from '@wagmi/connectors'
 
-const projectId = process.env.WALLETCONNECT_PROJECT_ID as string
+const projectId = process.env.WALLETCONNECT_PROJECT_ID as string;
 
 export default createConfig({
   chains: [mainnet, bsc, telosTestnet],
