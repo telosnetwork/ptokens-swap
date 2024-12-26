@@ -38,9 +38,9 @@
 </template>
 
 <script setup lang="ts">
-import { formatUnits, parseEther } from 'viem'
+import { Address, formatUnits, parseEther } from 'viem'
 import { ref, computed } from 'vue'
-import { useConfig, useReadContract, useDisconnect, useAccount, useWriteContract } from '@wagmi/vue'
+import { useConfig, useReadContract, useDisconnect, useAccount, useWriteContract, UseReadContractReturnType } from '@wagmi/vue'
 import { waitForTransactionReceipt } from '@wagmi/core'
 
 import RedeemABI from 'src/contracts/RedeemPTokenTLOS.json'
@@ -48,9 +48,9 @@ import ERC20ABI from 'src/contracts/MockERC20.json'
 import { useQuasar } from 'quasar'
 
 // Environment Variables
-const oftTokenAddress = String(process.env.OFTTELOS_CONTRACT)
-const pTokenAddress = String(process.env.PTLOS_CONTRACT)
-const redeemAddress = String(process.env.REDEEMER_CONTRACT)
+const oftTokenAddress = String(process.env.OFTTELOS_CONTRACT) as Address;
+const pTokenAddress = String(process.env.PTLOS_CONTRACT) as Address;
+const redeemAddress = String(process.env.REDEEMER_CONTRACT) as Address;
 
 const $q = useQuasar()
 const { disconnect } = useDisconnect()
@@ -96,8 +96,16 @@ const pTokenBalance = computed(() => formatOrZero(pTokenBalanceCall))
 const oftTokenBalance = computed(() => formatOrZero(oftTokenBalanceCall))
 const redeemableOftBalance = computed(() => formatOrZero(redeemableOftBalanceCall))
 const amountReceived = computed(() => {
-  if (pTokenBalanceCall?.data?.value && oftTokenBalanceCall?.data?.value) {
-    const amountLessFee = Math.min(pTokenBalanceCall.value, oftTokenBalanceCall.value) * 0.9975
+  // pTokenBalanceCall.data y oftTokenBalanceCall.data 
+  // are type Ref<bigint | undefined> according to wagmi.
+  const pBal = pTokenBalanceCall.data.value as bigint | undefined
+  const oftBal = oftTokenBalanceCall.data.value as bigint | undefined
+
+  if (pBal && oftBal) {
+    // Take the minimum of both BigInt manually
+    const minBalance = pBal < oftBal ? pBal : oftBal
+    // Apply the fee 0.9975 => (minBalance * 9975n) / 10000n
+    const amountLessFee = (minBalance * 9975n) / 10000n
     return formatUnits(amountLessFee, 18)
   }
 
@@ -138,7 +146,7 @@ const swapTokens = async () => {
     await waitForTransactionReceipt(config, {
       hash: approveResult,
       confirmations: 1,
-      pollInterval: 1000
+      pollingInterval: 1000
     })
 
     // TODO: Check for confimrations/receipt before doing swap
@@ -153,7 +161,7 @@ const swapTokens = async () => {
     await waitForTransactionReceipt(config, {
       hash: sendResult,
       confirmations: 1,
-      pollInterval: 1000
+      pollingInterval: 1000
     })
 
     pTokenBalanceCall.refetch()
