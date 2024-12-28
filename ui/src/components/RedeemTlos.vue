@@ -1,45 +1,105 @@
 <template>
-  <div class="q-pa-md">
-    <h1>Swap pTLOS for OFT TLOS</h1>
+  <q-card class="c-redeem-tlos">
+    <div class="c-redeem-tlos__container">
 
-    <!-- Wallet Info -->
-    <div v-if="connected" class="q-mb-md">
+      <!-- Wallet Info -->
+      <div v-if="connected" class="c-redeem-tlos__wallet-info">
+          <h1 class="c-redeem-tlos__title" >{{ chainName }}</h1>
+          <div class="c-redeem-tlos__"> Connected as: {{ address }} </div>
+          <div class="c-redeem-tlos__">Your pTokens TLOS Balance: {{ pTokenBalance }} TLOS</div>
+          <div class="c-redeem-tlos__">Your OFT TLOS Balance: {{ oftTokenBalance }} TLOS</div>
+          <q-btn class="c-redeem-tlos__disconnect-btn" @click="disconnect()" label="Disconnect" color="negative" icon="logout" />
+      </div>
+      <hd />
+
+      <h1 v-if="situation ==='low'" class="c-redeem-tlos__title"> Currently not enough OFT TLOS to pay you </h1>
+      <h1 v-if="situation ==='success'" class="c-redeem-tlos__title" >Swap successful! </h1>
+      <h1 v-if="situation ==='failed'" class="c-redeem-tlos__title" >Swap failed for unknown reason </h1>
+      <h1 v-if="situation ==='updated'" class="c-redeem-tlos__title" >You have no pTokens TLOS to redeem </h1>
+
+      <p
+        v-if="situation ==='low'"
+      >
+        You have a balance of {{ pTokenBalance }} pTLOS, but the redeem contract currently does not have enough OFT TLOS to pay you ({{ maximumRedeemable }}). You can wait or <a href="https://t.me/helloTelos" target="_blank">contact us</a> to refill the OFT TLOS balance.
+      </p>
+
+      <h1 v-if="situation ==='normal'" class="c-redeem-tlos__title" > You can redeem your {{ pTokenBalance }} pTLOS for OFT TLOS </h1>
+
+      <!-- Network Check -->
+      <div v-if="situation ==='unsupported'" class="c-redeem-tlos__unsupported">
+        <q-banner class="c-redeem-tlos__unsupported-banner" color="negative" inline-actions>
+          <div>Please switch to Ethereum or BSC chain.</div>
+        </q-banner>
+      </div>
+
+      <!-- Normal situation -->
+      <div v-if="situation ==='normal'" class="c-redeem-tlos__balance-swap">
+        <hr  class="c-redeem-tlos__separator"/>
         <div>
-          Connected to: {{ address }}
+          <b>Redeem Contract: </b><a class="c-redeem-tlos__contract"
+            :href="`${blockExplorer}address/${redeemAddress}?tab=contract`"
+            target="_blank"
+          >{{ redeemAddress }}</a><br>
+          <b>OFT TLOS Contract: </b><a class="c-redeem-tlos__contract"
+            :href="`${blockExplorer}address/${oftTokenAddress}?tab=contract`"
+            target="_blank"
+          >{{ oftTokenAddress }}</a><br>
+          <b>pTLOS Contract: </b><a class="c-redeem-tlos__contract"
+            :href="`${blockExplorer}address/${pTokenAddress}?tab=contract`"
+            target="_blank"
+          >{{ pTokenAddress }}</a><br>
         </div>
-        <q-btn @click="disconnect()" label="Disconnect" color="negative" />
-    </div>
+        <q-btn
+          class="c-redeem-tlos__swap-btn"
+          :disable="pTokenBalance === '0.0' || swapping"
+          @click="swapTokens"
+          label="Swap pTLOS for OFT TLOS"
+          color="secondary"
+          icon="swap_horiz"
+        />
+        <q-spinner v-if="swapping" class="c-redeem-tlos__swap-spinner" />
+      </div>
 
-    <!-- Network Check -->
-    <div v-if="chainUnsupported">
-      <q-banner class="q-mb-md" color="negative" inline-actions>
-        <div>Please switch to Ethereum or BSC chain.</div>
-      </q-banner>
-    </div>
+      <!-- Success situation -->
+      <div v-if="situation === 'success'" class="c-redeem-tlos__balance-swap">
+        <div v-if="swapHash">
+          <hr  class="c-redeem-tlos__separator"/>
+          <div class="c-redeem-tlos__">Approval hash: <a class="c-redeem-tlos__hash"
+              :href="`${blockExplorer}tx/${approvalHash}`"
+              target="_blank"
+            >{{ approvalHash }}</a></div>
+          <div class="c-redeem-tlos__">Swap hash: <a class="c-redeem-tlos__hash"
+              :href="`${blockExplorer}tx/${swapHash}`"
+              target="_blank"
+            >{{ swapHash }}</a></div>
+        </div>
+      </div>
 
-    <!-- Balance and Swap -->
-    <div v-if="connected && !chainUnsupported">
-      <div>Currently connected to: {{ chainName }}</div>
-      <div>Your pTokens TLOS Balance: {{ pTokenBalance }} TLOS</div>
-      <div>Your OFT TLOS Balance: {{ oftTokenBalance }} TLOS</div>
-      <div>Redeemable OFT TLOS: {{ redeemableOftBalance }} TLOS</div>
-      <div>Amount to swap (minus fees): {{ amountReceived }} TLOS</div>
-      <div>Approval hash: {{ approvalHash }}</div>
-      <div>Swap hash: {{ swapHash }}</div>
-      <q-btn
-        class="q-mt-md"
-        :disable="pTokenBalance === '0.0' || swapping"
-        @click="swapTokens"
-        label="Swap pTLOS for OFT TLOS"
-        color="secondary"
-      />
+      <div v-if="situation === 'success' || situation === 'updated'" class="c-redeem-tlos__balance-swap">
+        <hr  class="c-redeem-tlos__separator"/>
+        <div>
+          <b>OFT TLOS Contract: </b><a class="c-redeem-tlos__contract"
+            :href="`${blockExplorer}address/${oftTokenAddress}?tab=contract`"
+            target="_blank"
+          >{{ oftTokenAddress }}</a><br>
+          <b>pTLOS Contract: </b><a class="c-redeem-tlos__contract"
+            :href="`${blockExplorer}address/${pTokenAddress}?tab=contract`"
+            target="_blank"
+          >{{ pTokenAddress }}</a><br>
+          <b>Redeem Contract: </b><a class="c-redeem-tlos__contract"
+            :href="`${blockExplorer}address/${redeemAddress}?tab=contract`"
+            target="_blank"
+          >{{ redeemAddress }}</a><br>
+          <div class="c-redeem-tlos__">Redeemable OFT TLOS: {{ redeemableOftBalance }} TLOS</div>
+        </div>
+      </div>
     </div>
-  </div>
+  </q-card>
 </template>
 
 <script setup lang="ts">
 import { Address, formatUnits, parseEther } from 'viem'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useConfig, useReadContract, useDisconnect, useAccount, useWriteContract, UseReadContractReturnType } from '@wagmi/vue'
 import { waitForTransactionReceipt } from '@wagmi/core'
 
@@ -47,30 +107,40 @@ import RedeemABI from 'src/contracts/RedeemPTokenTLOS.json'
 import ERC20ABI from 'src/contracts/MockERC20.json'
 import { useQuasar } from 'quasar'
 
-// Environment Variables
-// TODO: make those addresses dynamic
-const oftTokenAddress = String(process.env.OFTTELOS_CONTRACT) as Address;
-const pTokenAddress = String(process.env.PTLOS_CONTRACT) as Address;
-const redeemAddress = String(process.env.REDEEMER_CONTRACT) as Address;
-
 const $q = useQuasar()
 const { disconnect } = useDisconnect()
 const { chain, address, isConnected } = useAccount()
 const { writeContractAsync } = useWriteContract()
+import { contractAddressForChain } from 'src/config'
 const config = useConfig()
+const error = ref('')
 
-// State
 const connected = computed(() => isConnected.value && !!address.value)
-const chainUnsupported = computed(() => {
-  // For simplicity, only allow Ethereum mainnet (chainId 1) or BSC (chainId 56)
-  return connected.value && chain.value && ![1,56, 41].includes(chain.value.id)
-})
+const chainUnsupported = ref(false);
 const chainName = computed(() => {
   if (chain.value) {
     return chain.value.name + (chain.value.testnet ? ' Testnet' : '')
   }
   return ''
 })
+
+const blockExplorer = computed(() => {
+  console.log('chain.value.blockExplorers: ', chain.value?.name, chain.value?.blockExplorers);
+  if (chain.value && chain.value.blockExplorers && chain.value.blockExplorers.default && chain.value.blockExplorers.default.url ) {
+    if (typeof chain.value.blockExplorers.default.url === 'string') {
+      return chain.value.blockExplorers.default.url as string;
+    } else {
+      return '';
+    }
+  }
+  return '';
+})
+
+// Getting Contract Address dynamically
+const addresses = computed(() => contractAddressForChain[chain.value?.id || 0])
+const oftTokenAddress = computed(() => (!chainUnsupported.value ? addresses.value?.oftToken : '') as Address)
+const pTokenAddress = computed(() => (!chainUnsupported.value ? addresses.value?.pToken : '') as Address)
+const redeemAddress = computed(() => (!chainUnsupported.value ? addresses.value?.redeem : '') as Address)
 
 const pTokenBalanceCall = useReadContract({
   abi: ERC20ABI.abi,
@@ -97,22 +167,28 @@ const pTokenBalance = computed(() => formatOrZero(pTokenBalanceCall))
 const oftTokenBalance = computed(() => formatOrZero(oftTokenBalanceCall))
 const redeemableOftBalance = computed(() => formatOrZero(redeemableOftBalanceCall))
 
-const amountReceived = computed(() => {
-  // pTokenBalanceCall.data y oftTokenBalanceCall.data 
-  // are type Ref<bigint | undefined> according to wagmi.
-  const pBal = pTokenBalanceCall.data.value as bigint | undefined
-  const oftBal = oftTokenBalanceCall.data.value as bigint | undefined
-
-  if (pBal && oftBal) {
-    // Take the minimum of both BigInt manually
-    const minBalance = pBal < oftBal ? pBal : oftBal
-    // Apply the fee 0.9975 => (minBalance * 9975n) / 10000n
-    const amountLessFee = (minBalance * 9975n) / 10000n
-    return formatUnits(amountLessFee, 18)
+// maximum amount that can be redeemed
+const maximumRedeemable = computed(() => {
+  let result = '0.0';
+  if (pTokenBalance.value === '0.0') return result
+  if (+pTokenBalance.value > +redeemableOftBalance.value) {
+    result = redeemableOftBalance.value;
+  } else {
+    result = pTokenBalance.value;
   }
-
-  return '0.0'
+  return result
 })
+
+let timer = setTimeout(() => {}, 0)
+const handleOnChainChanged = () => {
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    chainUnsupported.value = connected.value && (!chain.value || ![1,56, 41].includes(chain.value?.id || 0));
+  }, 100);
+}
+
+watch(chain, handleOnChainChanged, { immediate: true })
+
 
 const formatOrZero = (value: UseReadContractReturnType) => {
   if (!value || !value.isFetched || !value.data || !value.data.value) {
@@ -127,6 +203,7 @@ const approvalHash = ref('')
 const swapHash = ref('')
 
 const swapTokens = async () => {
+  error.value = ''
   if (!connected.value || chainUnsupported.value) {
     $q.notify({ type: 'negative', message: 'Please connect wallet on Ethereum or BSC.' })
     return
@@ -136,12 +213,12 @@ const swapTokens = async () => {
   try {
     swapping.value = true
     // TODO: Calculate based on available OFT balance of redeem contract
-    let amountToSwap = parseEther('1')
+    let amountToSwap = parseEther(maximumRedeemable.value);
     let approveResult = await writeContractAsync({
       abi: ERC20ABI.abi,
-      address: pTokenAddress,
+      address: pTokenAddress.value,
       functionName: 'approve',
-      args: [redeemAddress, amountToSwap]
+      args: [redeemAddress.value, amountToSwap]
     })
     approvalHash.value = approveResult
 
@@ -149,12 +226,13 @@ const swapTokens = async () => {
       hash: approveResult,
       confirmations: 1,
       pollingInterval: 1000
-    })
+    });
+
 
     // TODO: Check for confimrations/receipt before doing swap
     let sendResult = await writeContractAsync({
       abi: RedeemABI.abi,
-      address: redeemAddress,
+      address: redeemAddress.value,
       functionName: 'redeem',
       args: [amountToSwap]
     })
@@ -170,7 +248,9 @@ const swapTokens = async () => {
     oftTokenBalanceCall.refetch()
     redeemableOftBalanceCall.refetch()
     $q.notify({ type: 'positive', message: 'Swap successful!' })
+    error.value = 'success';
   } catch (err) {
+    error.value = 'failed';
     console.error(err)
     $q.notify({ type: 'negative', message: `Swap failed for unknown reason` })
   } finally {
@@ -178,19 +258,75 @@ const swapTokens = async () => {
   }
 }
 
-// onMounted(() => {
-//   if (connected.value && !chainUnsupported.value) {
-//     fetchBalance()
-//   }
-// })
-//
-// Refetch balance when chain or address changes
-// watch([connected, chainUnsupported, address, () => chain.value?.id], () => {
-//   if (connected.value && !chainUnsupported.value) {
-//     fetchBalance()
-//   } else {
-//     pTokenBalance.value = '0.0'
-//     oftTokenBalance.value = '0.0'
-//   }
-// })
+
+// State
+// normal: enough OFT on the redeem contract to pay the user
+// low: not enough OFT on the redeem contract to pay the user (user's balance is higher than redeem contract's balance)
+// unsupported: chain is not supported
+const situation = computed(() => {
+  if (error.value === 'success') {
+    return 'success'
+  } else if (error.value === 'failed') {
+    return 'failed'
+  }
+  if (chainUnsupported.value) {
+    return 'unsupported'
+  }
+  if (connected.value && +pTokenBalance.value === 0) {
+    return 'updated'
+  }
+  if (connected.value && +pTokenBalance.value > +redeemableOftBalance.value) {
+    return 'low'
+  }
+  if (connected.value && +pTokenBalance.value <= +redeemableOftBalance.value) {
+    return 'normal'
+  }
+  return 'unsupported'
+})
+
+
 </script>
+
+<style lang="scss">
+.c-redeem-tlos {
+  padding: 20px 25px;
+  max-width: 800px;
+  margin: 20px;
+  &__title {
+    font-size: 24px;
+    margin-bottom: 20px;
+    line-height: 36px;
+  }
+  &__separator {
+    margin: 20px 0;
+    height: 1px;
+  }
+  &__contract {
+    // margin-bottom: 10px;
+    font-size: 14px;
+  }
+  &__wallet-info {
+    margin-bottom: 20px;
+  }
+  &__unsupported {
+    margin-bottom: 20px;
+  }
+  &__unsupported-banner {
+    padding: 10px;
+  }
+  &__balance-swap {
+    margin-bottom: 20px;
+  }
+  &__disconnect-btn {
+    margin-top: 10px;
+  }
+  &__swap-btn {
+    margin-top: 20px;
+  }
+  &__swap-spinner {
+    margin: 20px 0px 0px 15px;
+    font-size: x-large;
+  }
+
+}
+</style>

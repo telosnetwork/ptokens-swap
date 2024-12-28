@@ -1,22 +1,3 @@
-<template>
-  <q-header class="c-main-header" elevated>
-    <header class="c-main-header-container">
-        Telos tTokens redeem tool page
-    </header>
-  </q-header>
-  <q-page class="c-main-page row items-center justify-evenly">
-    <div class="c-main-page__background-container">
-        <div class="c-main-page__background-top">
-            <div class="c-main-page__background-circle c-main-page__background-circle--1"></div>
-            <div class="c-main-page__background-circle c-main-page__background-circle--2"></div>
-        </div>
-        <div class="c-main-page__background-bottom"></div>
-    </div>
-    <redeem-tlos v-if="connected"/>
-    <connect-wallet v-else/>
-  </q-page>
-</template>
-
 <script setup lang="ts">
 import {computed} from "vue";
 import ConnectWallet from "components/ConnectWallet.vue";
@@ -25,11 +6,37 @@ import RedeemTlos from "components/RedeemTlos.vue";
 const { address, isConnected } = useAccount()
 
 const connected = computed(() => isConnected.value && !!address.value)
-// const chainUnsupported = computed(() => {
-//   // For simplicity, only allow Ethereum mainnet (chainId 1) or BSC (chainId 56)
-//   return connected.value && ![1,56].includes(chain.value)
-// })
 </script>
+
+<template>
+  <q-header class="c-main-header" elevated>
+    <header class="c-main-header-container">
+        <img
+            src="/image/telos-circle-logo.svg"
+            alt="Telos Circle Logo"
+            class="c-main-header__logo"
+        >
+        Telos
+    </header>
+  </q-header>
+  <q-page class="c-main-page row items-center justify-evenly">
+    <div class="c-main-page__background-container">
+        <div class="c-main-page__background-top">
+            <div class="c-main-page__background-circle c-main-page__background-circle--1"></div>
+            <div class="c-main-page__background-circle c-main-page__background-circle--2"></div>
+            <!--div class="c-main-page__background-title">
+                tTokens redeem tool page
+            </div-->
+        </div>
+        <div class="c-main-page__background-bottom">
+            <div class="c-main-page__background-subtitle">
+            </div>
+        </div>
+    </div>
+    <redeem-tlos v-if="connected"/>
+    <connect-wallet v-else/>
+  </q-page>
+</template>
 
 <style lang="scss">
 
@@ -38,12 +45,22 @@ const connected = computed(() => isConnected.value && !!address.value)
     color: var(--text-color);
     padding: 20px;
     font-size: 24px;
+    &-container {
+        display: flex;
+        align-items: center;
+    }
+    &__logo {
+        width: 50px;
+        height: 50px;
+        margin-right: 10px;
+    }
 }
 
 .c-main-page {
 
-  &__background-container {
-        position: fixed;
+
+    &__background-container {
+        position: absolute;
         z-index: -1;
         top: 0;
         right: 0;
@@ -55,6 +72,27 @@ const connected = computed(() => isConnected.value && !!address.value)
             background-color: rgb(28, 28, 28);
             opacity: 1;
         }
+    }
+
+    &__background-title {
+        font-size: 36px;
+        // font shadow
+        text-shadow: 0 0 10px rgba(220, 220, 220, 0.5);
+        color: white;
+        padding: 30px;
+    }
+
+    &__background-subtitle {
+        font-size: 24px;
+        font-weight: 500;
+        color: var(--text-color);
+        text-align: center;
+    }
+
+    &__background-top {
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 
     &__background-top,
@@ -108,6 +146,10 @@ const connected = computed(() => isConnected.value && !!address.value)
     }
 
     &__background-bottom {
+        font-size: 24px;
+        padding: 30px;
+        text-align: center;
+
         top: 30vh;
         height: 70vh;
 
