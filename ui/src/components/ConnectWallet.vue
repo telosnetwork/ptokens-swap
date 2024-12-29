@@ -11,7 +11,7 @@ const { connectors, connect } = useConnect();
 <template>
     <div class="c-connect">
       <div class="c-connect--title">
-        tTokens redeem tool page
+        pToken TLOS to OFT TLOS migration
       </div>
 
       <q-card class="c-connect--card">

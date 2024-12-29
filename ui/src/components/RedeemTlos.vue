@@ -12,28 +12,38 @@
       </div>
       <hd />
 
-      <h1 v-if="situation ==='low'" class="c-redeem-tlos__title"> Currently not enough OFT TLOS to pay you </h1>
-      <h1 v-if="situation ==='success'" class="c-redeem-tlos__title" >Swap successful! </h1>
-      <h1 v-if="situation ==='failed'" class="c-redeem-tlos__title" >Swap failed for unknown reason </h1>
-      <h1 v-if="situation ==='updated'" class="c-redeem-tlos__title" >You have no pTokens TLOS to redeem </h1>
+      <h1 v-if="situation === 'success'" class="c-redeem-tlos__title" >Swap successful! </h1>
+      <h1 v-if="situation === 'failed'" class="c-redeem-tlos__title" >Swap failed for unknown reason </h1>
+      <h1 v-if="situation === 'updated'" class="c-redeem-tlos__title" >You have no pTokens TLOS to redeem </h1>
 
-      <p
+      <div
         v-if="situation ==='low'"
       >
-        You have a balance of {{ pTokenBalance }} pTLOS, but the redeem contract currently does not have enough OFT TLOS to pay you ({{ maximumRedeemable }}). You can wait or <a href="https://t.me/helloTelos" target="_blank">contact us</a> to refill the OFT TLOS balance.
-      </p>
+        <h1 class="c-redeem-tlos__title"> Please note: The contract is temporarily low on OFT TLOS to swap for, the amount you can swap is limited to what the contract currently has.  More will be added soon.</h1>
+        <div>Your pToken balance:  {{ pTokenBalance }} TLOS</div>
+        <div>Contract OFT balance: {{ maximumRedeemable }} TLOS</div>
+      </div>
 
-      <h1 v-if="situation ==='normal'" class="c-redeem-tlos__title" > You can redeem your {{ pTokenBalance }} pTLOS for OFT TLOS </h1>
 
       <!-- Network Check -->
-      <div v-if="situation ==='unsupported'" class="c-redeem-tlos__unsupported">
+      <div v-if="situation === 'unsupported'" class="c-redeem-tlos__unsupported">
         <q-banner class="c-redeem-tlos__unsupported-banner" color="negative" inline-actions>
           <div>Please switch to Ethereum or BSC chain.</div>
         </q-banner>
       </div>
 
       <!-- Normal situation -->
-      <div v-if="situation ==='normal'" class="c-redeem-tlos__balance-swap">
+      <div v-if="situation === 'normal' || situation === 'low'" class="c-redeem-tlos__balance-swap">
+        <div class="c-redeem-tlos__title" > You can redeem {{ maximumRedeemable }} pTLOS for OFT TLOS </div>
+        <q-btn
+          class="c-redeem-tlos__swap-btn"
+          :disable="pTokenBalance === '0.0' || swapping"
+          @click="swapTokens"
+          label="Redeem now"
+          color="secondary"
+          icon="swap_horiz"
+        />
+        <q-spinner v-if="swapping" class="c-redeem-tlos__swap-spinner" />
         <hr  class="c-redeem-tlos__separator"/>
         <div>
           <b>Redeem Contract: </b><a class="c-redeem-tlos__contract"
@@ -49,15 +59,6 @@
             target="_blank"
           >{{ pTokenAddress }}</a><br>
         </div>
-        <q-btn
-          class="c-redeem-tlos__swap-btn"
-          :disable="pTokenBalance === '0.0' || swapping"
-          @click="swapTokens"
-          label="Swap pTLOS for OFT TLOS"
-          color="secondary"
-          icon="swap_horiz"
-        />
-        <q-spinner v-if="swapping" class="c-redeem-tlos__swap-spinner" />
       </div>
 
       <!-- Success situation -->
