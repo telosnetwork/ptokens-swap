@@ -98,9 +98,9 @@
 </template>
 
 <script setup lang="ts">
-import { Address, formatUnits, parseEther } from 'viem'
+import { type Address, formatUnits, parseEther } from 'viem'
 import { ref, computed, watch } from 'vue'
-import { useConfig, useReadContract, useDisconnect, useAccount, useWriteContract, UseReadContractReturnType } from '@wagmi/vue'
+import { useConfig, useReadContract, useDisconnect, useAccount, useWriteContract, type UseReadContractReturnType } from '@wagmi/vue'
 import { waitForTransactionReceipt } from '@wagmi/core'
 
 import RedeemABI from 'src/contracts/RedeemPTokenTLOS.json'
@@ -213,8 +213,8 @@ const swapTokens = async () => {
   try {
     swapping.value = true
     // TODO: Calculate based on available OFT balance of redeem contract
-    let amountToSwap = parseEther(maximumRedeemable.value);
-    let approveResult = await writeContractAsync({
+    const amountToSwap = parseEther(maximumRedeemable.value);
+    const approveResult = await writeContractAsync({
       abi: ERC20ABI.abi,
       address: pTokenAddress.value,
       functionName: 'approve',
@@ -230,7 +230,7 @@ const swapTokens = async () => {
 
 
     // TODO: Check for confimrations/receipt before doing swap
-    let sendResult = await writeContractAsync({
+    const sendResult = await writeContractAsync({
       abi: RedeemABI.abi,
       address: redeemAddress.value,
       functionName: 'redeem',
