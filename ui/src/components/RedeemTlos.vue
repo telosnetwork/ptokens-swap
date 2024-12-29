@@ -5,7 +5,13 @@
       <!-- Wallet Info -->
       <div v-if="connected" class="c-redeem-tlos__wallet-info">
           <h1 class="c-redeem-tlos__title" >{{ chainName }}</h1>
-          <div class="c-redeem-tlos__"> Connected as: {{ address }} </div>
+          <div class="c-redeem-tlos__"> Connected as:
+            <a class="c-redeem-tlos__contract"
+            :href="`${blockExplorer}/address/${address}`"
+            target="_blank"
+          >{{ address }}</a>
+          </div>
+
           <div class="c-redeem-tlos__">Your pTokens TLOS Balance: {{ pTokenBalance }} TLOS</div>
           <div class="c-redeem-tlos__">Your OFT TLOS Balance: {{ oftTokenBalance }} TLOS</div>
           <q-btn class="c-redeem-tlos__disconnect-btn" @click="disconnect()" label="Disconnect" color="negative" icon="logout" />
@@ -47,15 +53,15 @@
         <hr  class="c-redeem-tlos__separator"/>
         <div>
           <b>Redeem Contract: </b><a class="c-redeem-tlos__contract"
-            :href="`${blockExplorer}address/${redeemAddress}?tab=contract`"
+            :href="`${blockExplorer}/address/${redeemAddress}?tab=contract`"
             target="_blank"
           >{{ redeemAddress }}</a><br>
           <b>OFT TLOS Contract: </b><a class="c-redeem-tlos__contract"
-            :href="`${blockExplorer}address/${oftTokenAddress}?tab=contract`"
+            :href="`${blockExplorer}/address/${oftTokenAddress}?tab=contract`"
             target="_blank"
           >{{ oftTokenAddress }}</a><br>
           <b>pTLOS Contract: </b><a class="c-redeem-tlos__contract"
-            :href="`${blockExplorer}address/${pTokenAddress}?tab=contract`"
+            :href="`${blockExplorer}/address/${pTokenAddress}?tab=contract`"
             target="_blank"
           >{{ pTokenAddress }}</a><br>
         </div>
@@ -66,11 +72,11 @@
         <div v-if="swapHash">
           <hr  class="c-redeem-tlos__separator"/>
           <div class="c-redeem-tlos__">Approval hash: <a class="c-redeem-tlos__hash"
-              :href="`${blockExplorer}tx/${approvalHash}`"
+              :href="`${blockExplorer}/tx/${approvalHash}`"
               target="_blank"
             >{{ approvalHash }}</a></div>
           <div class="c-redeem-tlos__">Swap hash: <a class="c-redeem-tlos__hash"
-              :href="`${blockExplorer}tx/${swapHash}`"
+              :href="`${blockExplorer}/tx/${swapHash}`"
               target="_blank"
             >{{ swapHash }}</a></div>
         </div>
@@ -80,15 +86,15 @@
         <hr  class="c-redeem-tlos__separator"/>
         <div>
           <b>OFT TLOS Contract: </b><a class="c-redeem-tlos__contract"
-            :href="`${blockExplorer}address/${oftTokenAddress}?tab=contract`"
+            :href="`${blockExplorer}/address/${oftTokenAddress}?tab=contract`"
             target="_blank"
           >{{ oftTokenAddress }}</a><br>
           <b>pTLOS Contract: </b><a class="c-redeem-tlos__contract"
-            :href="`${blockExplorer}address/${pTokenAddress}?tab=contract`"
+            :href="`${blockExplorer}/address/${pTokenAddress}?tab=contract`"
             target="_blank"
           >{{ pTokenAddress }}</a><br>
           <b>Redeem Contract: </b><a class="c-redeem-tlos__contract"
-            :href="`${blockExplorer}address/${redeemAddress}?tab=contract`"
+            :href="`${blockExplorer}/address/${redeemAddress}?tab=contract`"
             target="_blank"
           >{{ redeemAddress }}</a><br>
           <div class="c-redeem-tlos__">Redeemable OFT TLOS: {{ redeemableOftBalance }} TLOS</div>
@@ -126,15 +132,19 @@ const chainName = computed(() => {
 })
 
 const blockExplorer = computed(() => {
-  console.log('chain.value.blockExplorers: ', chain.value?.name, chain.value?.blockExplorers);
+  let domain = '';
   if (chain.value && chain.value.blockExplorers && chain.value.blockExplorers.default && chain.value.blockExplorers.default.url ) {
     if (typeof chain.value.blockExplorers.default.url === 'string') {
-      return chain.value.blockExplorers.default.url as string;
+      domain = chain.value.blockExplorers.default.url as string;
     } else {
-      return '';
+      domain = '';
     }
   }
-  return '';
+  // get rid of the last slash (if present)
+  if (domain.endsWith('/')) {
+    domain = domain.slice(0, -1);
+  }
+  return domain;
 })
 
 // Getting Contract Address dynamically
@@ -328,6 +338,5 @@ const situation = computed(() => {
     margin: 20px 0px 0px 15px;
     font-size: x-large;
   }
-
 }
 </style>
