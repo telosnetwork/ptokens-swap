@@ -194,7 +194,15 @@ let timer = setTimeout(() => {}, 0)
 const handleOnChainChanged = () => {
   clearTimeout(timer);
   timer = setTimeout(() => {
-    chainUnsupported.value = connected.value && (!chain.value || ![1,56, 41].includes(chain.value?.id || 0));
+    if ( process.env.NODE_ENV === 'production' ) {
+      // Only Ethereum and BSC are supported in production
+      if (chain.value && ![1,56].includes(chain.value?.id || 0)) {
+        chainUnsupported.value = true;
+        return;
+      }
+    } else {
+      chainUnsupported.value = connected.value && (!chain.value || ![1,56, 41].includes(chain.value?.id || 0));
+    }
   }, 100);
 }
 
