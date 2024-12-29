@@ -1,5 +1,5 @@
 {
-  "name": "ptokens-swap",
+  "name": "ptokens-migration",
   "version": "1.0.0",
   "main": "index.js",
   "author": "Jesse Schulman <jes.schulman@gmail.com>",
