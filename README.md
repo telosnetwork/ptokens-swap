@@ -15,4 +15,3 @@ cd ui/
 yarn
 quasar dev
 ```
-
