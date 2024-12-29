@@ -2,7 +2,7 @@
   "name": "ui",
   "version": "0.0.1",
   "description": "Swap UI to redeem pTokens TLOS for OFT TLOS",
-  "productName": "pTokens Swap",
+  "productName": "Telos pTokens Swap",
   "author": "Jesse Schulman <jes.schulman@gmail.com>",
   "type": "module",
   "private": true,
