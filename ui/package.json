@@ -1,8 +1,8 @@
 {
-  "name": "ui",
+  "name": "ptokens-migration-webapp",
   "version": "0.0.1",
-  "description": "Swap UI to redeem pTokens TLOS for OFT TLOS",
-  "productName": "pTokens Swap",
+  "description": "Webapp to help users to redeem pTokens TLOS for OFT TLOS",
+  "productName": "Telos pTokens Migration",
   "author": "Jesse Schulman <jes.schulman@gmail.com>",
   "type": "module",
   "private": true,

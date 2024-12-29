@@ -12,14 +12,14 @@
       </div>
       <hd />
 
-      <h1 v-if="situation === 'success'" class="c-redeem-tlos__title" >Swap successful! </h1>
-      <h1 v-if="situation === 'failed'" class="c-redeem-tlos__title" >Swap failed for unknown reason </h1>
+      <h1 v-if="situation === 'success'" class="c-redeem-tlos__title" >Migration successful! </h1>
+      <h1 v-if="situation === 'failed'" class="c-redeem-tlos__title" >Migration failed for unknown reason </h1>
       <h1 v-if="situation === 'updated'" class="c-redeem-tlos__title" >You have no pTokens TLOS to redeem </h1>
 
       <div
         v-if="situation ==='low'"
       >
-        <h1 class="c-redeem-tlos__title"> Please note: The contract is temporarily low on OFT TLOS to swap for, the amount you can swap is limited to what the contract currently has.  More will be added soon.</h1>
+        <h1 class="c-redeem-tlos__title"> Please note: The contract is temporarily low on OFT TLOS to perform such a migration, the amount you can migrate is limited to what the contract currently has.  More will be added soon.</h1>
         <div>Your pToken balance:  {{ pTokenBalance }} TLOS</div>
         <div>Contract OFT balance: {{ maximumRedeemable }} TLOS</div>
       </div>

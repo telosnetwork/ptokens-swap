@@ -1,10 +1,10 @@
-# pTokens to OFT TLOS swap contract & UI
+# pTokens to OFT TLOS migration contract & UI
 
 Clone this repo locally and start working with it
 ```bash
 # clone repo and enter folder
-git clone https://github.com/telosnetwork/ptokens-swap.git
-cd ptokens-swap
+git clone https://github.com/telosnetwork/ptokens-migration.git
+cd ptokens-migration
 ```
 
 If haven't install the dev tools yet:
