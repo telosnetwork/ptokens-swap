@@ -150,8 +150,8 @@ const connected = computed(() => isConnected.value && !!address.value)
         padding: 30px;
         text-align: center;
 
-        top: 30vh;
-        height: 70vh;
+        top: 30%;
+        height: 70%;
 
         background-image:
             radial-gradient(circle at 112% 75%, var(--q-accent), transparent 20%),
