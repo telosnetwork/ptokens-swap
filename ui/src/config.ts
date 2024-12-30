@@ -44,10 +44,10 @@ export const logoURLforConnector: { [conntector: string]: string } = {
 export default createConfig({
   chains: [mainnet, bsc, telosTestnet],
   connectors: [
-    injected(),
     metaMask(),
     safe(),
-    walletConnect({projectId})
+    walletConnect({projectId}),
+    injected()
   ],
   transports: {
     [mainnet.id]: http(),

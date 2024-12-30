@@ -5,59 +5,66 @@
       <!-- Wallet Info -->
       <div v-if="connected" class="c-redeem-tlos__wallet-info">
           <h1 class="c-redeem-tlos__title" >{{ chainName }}</h1>
-          <div class="c-redeem-tlos__"> Connected as: {{ address }} </div>
+          <div class="c-redeem-tlos__"> Connected as:
+            <a class="c-redeem-tlos__contract"
+            :href="`${blockExplorer}/address/${address}`"
+            target="_blank"
+          >{{ address }}</a>
+          </div>
+
           <div class="c-redeem-tlos__">Your pTokens TLOS Balance: {{ pTokenBalance }} TLOS</div>
           <div class="c-redeem-tlos__">Your OFT TLOS Balance: {{ oftTokenBalance }} TLOS</div>
           <q-btn class="c-redeem-tlos__disconnect-btn" @click="disconnect()" label="Disconnect" color="negative" icon="logout" />
       </div>
       <hd />
 
-      <h1 v-if="situation ==='low'" class="c-redeem-tlos__title"> Currently not enough OFT TLOS to pay you </h1>
-      <h1 v-if="situation ==='success'" class="c-redeem-tlos__title" >Swap successful! </h1>
-      <h1 v-if="situation ==='failed'" class="c-redeem-tlos__title" >Swap failed for unknown reason </h1>
-      <h1 v-if="situation ==='updated'" class="c-redeem-tlos__title" >You have no pTokens TLOS to redeem </h1>
+      <h1 v-if="situation === 'success'" class="c-redeem-tlos__title" >Migration successful! </h1>
+      <h1 v-if="situation === 'failed'" class="c-redeem-tlos__title" >Migration failed for unknown reason </h1>
+      <h1 v-if="situation === 'updated'" class="c-redeem-tlos__title" >You have no pTokens TLOS to redeem </h1>
 
-      <p
+      <div
         v-if="situation ==='low'"
       >
-        You have a balance of {{ pTokenBalance }} pTLOS, but the redeem contract currently does not have enough OFT TLOS to pay you ({{ maximumRedeemable }}). You can wait or <a href="https://t.me/helloTelos" target="_blank">contact us</a> to refill the OFT TLOS balance.
-      </p>
+        <h1 class="c-redeem-tlos__title"> Please note: The contract is temporarily low on OFT TLOS to perform such a migration, the amount you can migrate is limited to what the contract currently has.  More will be added soon.</h1>
+        <div>Your pToken balance:  {{ pTokenBalance }} TLOS</div>
+        <div>Contract OFT balance: {{ maximumRedeemable }} TLOS</div>
+      </div>
 
-      <h1 v-if="situation ==='normal'" class="c-redeem-tlos__title" > You can redeem your {{ pTokenBalance }} pTLOS for OFT TLOS </h1>
 
       <!-- Network Check -->
-      <div v-if="situation ==='unsupported'" class="c-redeem-tlos__unsupported">
+      <div v-if="situation === 'unsupported'" class="c-redeem-tlos__unsupported">
         <q-banner class="c-redeem-tlos__unsupported-banner" color="negative" inline-actions>
           <div>Please switch to Ethereum or BSC chain.</div>
         </q-banner>
       </div>
 
       <!-- Normal situation -->
-      <div v-if="situation ==='normal'" class="c-redeem-tlos__balance-swap">
-        <hr  class="c-redeem-tlos__separator"/>
-        <div>
-          <b>Redeem Contract: </b><a class="c-redeem-tlos__contract"
-            :href="`${blockExplorer}address/${redeemAddress}?tab=contract`"
-            target="_blank"
-          >{{ redeemAddress }}</a><br>
-          <b>OFT TLOS Contract: </b><a class="c-redeem-tlos__contract"
-            :href="`${blockExplorer}address/${oftTokenAddress}?tab=contract`"
-            target="_blank"
-          >{{ oftTokenAddress }}</a><br>
-          <b>pTLOS Contract: </b><a class="c-redeem-tlos__contract"
-            :href="`${blockExplorer}address/${pTokenAddress}?tab=contract`"
-            target="_blank"
-          >{{ pTokenAddress }}</a><br>
-        </div>
+      <div v-if="situation === 'normal' || situation === 'low'" class="c-redeem-tlos__balance-swap">
+        <div class="c-redeem-tlos__title" > You can redeem {{ maximumRedeemable }} pTLOS for OFT TLOS </div>
         <q-btn
           class="c-redeem-tlos__swap-btn"
           :disable="pTokenBalance === '0.0' || swapping"
           @click="swapTokens"
-          label="Swap pTLOS for OFT TLOS"
+          label="Redeem now"
           color="secondary"
           icon="swap_horiz"
         />
         <q-spinner v-if="swapping" class="c-redeem-tlos__swap-spinner" />
+        <hr  class="c-redeem-tlos__separator"/>
+        <div>
+          <b>Redeem Contract: </b><a class="c-redeem-tlos__contract"
+            :href="`${blockExplorer}/address/${redeemAddress}?tab=contract`"
+            target="_blank"
+          >{{ redeemAddress }}</a><br>
+          <b>OFT TLOS Contract: </b><a class="c-redeem-tlos__contract"
+            :href="`${blockExplorer}/address/${oftTokenAddress}?tab=contract`"
+            target="_blank"
+          >{{ oftTokenAddress }}</a><br>
+          <b>pTLOS Contract: </b><a class="c-redeem-tlos__contract"
+            :href="`${blockExplorer}/address/${pTokenAddress}?tab=contract`"
+            target="_blank"
+          >{{ pTokenAddress }}</a><br>
+        </div>
       </div>
 
       <!-- Success situation -->
@@ -65,11 +72,11 @@
         <div v-if="swapHash">
           <hr  class="c-redeem-tlos__separator"/>
           <div class="c-redeem-tlos__">Approval hash: <a class="c-redeem-tlos__hash"
-              :href="`${blockExplorer}tx/${approvalHash}`"
+              :href="`${blockExplorer}/tx/${approvalHash}`"
               target="_blank"
             >{{ approvalHash }}</a></div>
           <div class="c-redeem-tlos__">Swap hash: <a class="c-redeem-tlos__hash"
-              :href="`${blockExplorer}tx/${swapHash}`"
+              :href="`${blockExplorer}/tx/${swapHash}`"
               target="_blank"
             >{{ swapHash }}</a></div>
         </div>
@@ -79,15 +86,15 @@
         <hr  class="c-redeem-tlos__separator"/>
         <div>
           <b>OFT TLOS Contract: </b><a class="c-redeem-tlos__contract"
-            :href="`${blockExplorer}address/${oftTokenAddress}?tab=contract`"
+            :href="`${blockExplorer}/address/${oftTokenAddress}?tab=contract`"
             target="_blank"
           >{{ oftTokenAddress }}</a><br>
           <b>pTLOS Contract: </b><a class="c-redeem-tlos__contract"
-            :href="`${blockExplorer}address/${pTokenAddress}?tab=contract`"
+            :href="`${blockExplorer}/address/${pTokenAddress}?tab=contract`"
             target="_blank"
           >{{ pTokenAddress }}</a><br>
           <b>Redeem Contract: </b><a class="c-redeem-tlos__contract"
-            :href="`${blockExplorer}address/${redeemAddress}?tab=contract`"
+            :href="`${blockExplorer}/address/${redeemAddress}?tab=contract`"
             target="_blank"
           >{{ redeemAddress }}</a><br>
           <div class="c-redeem-tlos__">Redeemable OFT TLOS: {{ redeemableOftBalance }} TLOS</div>
@@ -98,9 +105,9 @@
 </template>
 
 <script setup lang="ts">
-import { Address, formatUnits, parseEther } from 'viem'
+import { type Address, formatUnits, parseEther } from 'viem'
 import { ref, computed, watch } from 'vue'
-import { useConfig, useReadContract, useDisconnect, useAccount, useWriteContract, UseReadContractReturnType } from '@wagmi/vue'
+import { useConfig, useReadContract, useDisconnect, useAccount, useWriteContract, type UseReadContractReturnType } from '@wagmi/vue'
 import { waitForTransactionReceipt } from '@wagmi/core'
 
 import RedeemABI from 'src/contracts/RedeemPTokenTLOS.json'
@@ -125,15 +132,19 @@ const chainName = computed(() => {
 })
 
 const blockExplorer = computed(() => {
-  console.log('chain.value.blockExplorers: ', chain.value?.name, chain.value?.blockExplorers);
+  let domain = '';
   if (chain.value && chain.value.blockExplorers && chain.value.blockExplorers.default && chain.value.blockExplorers.default.url ) {
     if (typeof chain.value.blockExplorers.default.url === 'string') {
-      return chain.value.blockExplorers.default.url as string;
+      domain = chain.value.blockExplorers.default.url as string;
     } else {
-      return '';
+      domain = '';
     }
   }
-  return '';
+  // get rid of the last slash (if present)
+  if (domain.endsWith('/')) {
+    domain = domain.slice(0, -1);
+  }
+  return domain;
 })
 
 // Getting Contract Address dynamically
@@ -183,7 +194,15 @@ let timer = setTimeout(() => {}, 0)
 const handleOnChainChanged = () => {
   clearTimeout(timer);
   timer = setTimeout(() => {
-    chainUnsupported.value = connected.value && (!chain.value || ![1,56, 41].includes(chain.value?.id || 0));
+    if ( process.env.NODE_ENV === 'production' ) {
+      // Only Ethereum and BSC are supported in production
+      if (chain.value && ![1,56].includes(chain.value?.id || 0)) {
+        chainUnsupported.value = true;
+        return;
+      }
+    } else {
+      chainUnsupported.value = connected.value && (!chain.value || ![1,56, 41].includes(chain.value?.id || 0));
+    }
   }, 100);
 }
 
@@ -213,8 +232,8 @@ const swapTokens = async () => {
   try {
     swapping.value = true
     // TODO: Calculate based on available OFT balance of redeem contract
-    let amountToSwap = parseEther(maximumRedeemable.value);
-    let approveResult = await writeContractAsync({
+    const amountToSwap = parseEther(maximumRedeemable.value);
+    const approveResult = await writeContractAsync({
       abi: ERC20ABI.abi,
       address: pTokenAddress.value,
       functionName: 'approve',
@@ -230,7 +249,7 @@ const swapTokens = async () => {
 
 
     // TODO: Check for confimrations/receipt before doing swap
-    let sendResult = await writeContractAsync({
+    const sendResult = await writeContractAsync({
       abi: RedeemABI.abi,
       address: redeemAddress.value,
       functionName: 'redeem',
@@ -327,6 +346,5 @@ const situation = computed(() => {
     margin: 20px 0px 0px 15px;
     font-size: x-large;
   }
-
 }
 </style>

@@ -11,7 +11,7 @@ const { connectors, connect } = useConnect();
 <template>
     <div class="c-connect">
       <div class="c-connect--title">
-        tTokens redeem tool page
+        pToken TLOS to OFT TLOS migration
       </div>
 
       <q-card class="c-connect--card">
@@ -50,6 +50,13 @@ const { connectors, connect } = useConnect();
     text-align: center;
     margin: 30px;
     margin-top: -200px;
+
+    // on low resolution screens
+    @media (max-width: 600px) {
+      font-size: 22px;
+      margin: 14px;
+      margin-top: -100px;
+    }
   }
 
   &--card {

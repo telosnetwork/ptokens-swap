@@ -1,40 +1,21 @@
-# pTokens Swap (ui)
+# pTokens Migration (ui)
 
-Swap UI to redeem pTokens TLOS for OFT TLOS
+Webapp to help users to redeem pTokens TLOS for OFT TLOS
 
-## Install the dependencies
+
+If haven't install the dev tools yet:
 ```bash
-yarn
-# or
-npm install
+# setting up tools
+nvm install v22.12.0
+nvm use v22.12.0
+npm i -g yarn
+yarn global add @quasar/cli@2.4.1
 ```
 
-### Start the app in development mode (hot-code reloading, error reporting, etc.)
+To run the webapp:
 ```bash
+# running the pTokens Webapp UI
+cd ui/
+yarn
 quasar dev
 ```
-
-
-### Lint the files
-```bash
-yarn lint
-# or
-npm run lint
-```
-
-
-### Format the files
-```bash
-yarn format
-# or
-npm run format
-```
-
-
-### Build the app for production
-```bash
-quasar build
-```
-
-### Customize the configuration
-See [Configuring quasar.config.js](https://v2.quasar.dev/quasar-cli-vite/quasar-config-js).
