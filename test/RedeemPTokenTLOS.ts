@@ -105,7 +105,7 @@ describe("RedeemPTokenTLOS", function () {
             } catch (e) {
                 failed = true;
             }
-            expect(failed, "Redeem should fail");
+            expect(failed, "Redeem should fail").to.be.true;
 
             const ptokenBalanceAfterFail = await ptokenTLOS.read.balanceOf([otherAccount.account.address]);
             expect(ptokenBalanceAfterFail).to.equal(fullAmount, "PToken balance is incorrect after failed redeem");
@@ -125,6 +125,80 @@ describe("RedeemPTokenTLOS", function () {
 
             const oftBalanceAfter = await oftTLOS.read.balanceOf([otherAccount.account.address]);
             expect(oftBalanceAfter).to.equal(halfAmount, "");
+        });
+
+        it("Owner is the only account that can withdraw", async function () {
+            const {
+                redeem,
+                ptokenTLOS,
+                oftTLOS,
+                publicClient,
+                owner,
+                otherAccount
+            } = await loadFixture(deployTokensAndRedeem);
+
+            const fullAmount = parseUnits("10000", 18);
+            const halfAmount = parseUnits("5000", 18);
+            const doubleAmount = parseUnits("20000", 18);
+
+            const redeemOwner = await redeem.read.owner();
+            expect(redeemOwner.toLowerCase()).to.equal(owner.account.address, "Owner is incorrect");
+
+            const oftTransferredHash = await oftTLOS.write.transfer([redeem.address, fullAmount]);
+            const oftTransferredReceipt = await publicClient.waitForTransactionReceipt({hash: oftTransferredHash});
+            expect(oftTransferredReceipt.status).to.equal("success", "OFT transfer failed");
+
+            const reserveBalance = await oftTLOS.read.balanceOf([redeem.address]);
+            expect(reserveBalance).to.equal(fullAmount);
+
+            const ptokenTransferredHash = await ptokenTLOS.write.transfer([redeem.address, fullAmount]);
+            const ptokenTransferredReceipt = await publicClient.waitForTransactionReceipt({hash: ptokenTransferredHash});
+            expect(ptokenTransferredReceipt.status).to.equal("success", "PToken transfer failed");
+
+            const ptokenBalance = await ptokenTLOS.read.balanceOf([redeem.address]);
+            expect(ptokenBalance).to.equal(fullAmount);
+
+            let failed = false;
+            try {
+                const withdrewOFT = await redeem.write.withdrawOFTokens(
+                  [halfAmount],
+                  { account: otherAccount.account }
+                );
+            } catch (e) {
+                failed = true;
+            }
+            expect(failed, "Other account should not be able to call withdawOFTokens").to.be.true;
+
+            failed = false;
+            try {
+                const withdrewPTokens = await redeem.write.withdrawPTokens(
+                  [halfAmount],
+                  { account: otherAccount.account }
+                );
+            } catch (e) {
+                failed = true;
+            }
+            expect(failed, "Other account should not be able to call withdrawPTokens").to.be.true;
+
+            const ownerOFTBalanceBeforeWithdraw = await oftTLOS.read.balanceOf([owner.account.address]);
+            const withdrewOFT = await redeem.write.withdrawOFTokens([halfAmount]);
+            const withdrewOFTReceipt = await publicClient.waitForTransactionReceipt({hash: withdrewOFT});
+            expect(withdrewOFTReceipt.status).to.equal("success", "OFT withdraw failed");
+            const ownerOFTBalanceAfterWithdraw = await oftTLOS.read.balanceOf([owner.account.address]);
+            expect(ownerOFTBalanceAfterWithdraw).to.equal(ownerOFTBalanceBeforeWithdraw + halfAmount, `After withdraw the owner balance should increase by ${halfAmount}`);
+
+            const reserveBalanceAfterWithdraw = await oftTLOS.read.balanceOf([redeem.address]);
+            expect(reserveBalanceAfterWithdraw).to.equal(halfAmount, `After withdraw the reserve balance should decrease by ${halfAmount}`);
+
+            const ownerPTokenBalanceBeforeWithdraw = await ptokenTLOS.read.balanceOf([owner.account.address]);
+            const withdrewPTokens = await redeem.write.withdrawPTokens([halfAmount]);
+            const withdrewPTokensReceipt = await publicClient.waitForTransactionReceipt({hash: withdrewPTokens});
+            expect(withdrewPTokensReceipt.status).to.equal("success", "PToken withdraw failed");
+            const ownerPTokenBalanceAfterWithdraw = await ptokenTLOS.read.balanceOf([owner.account.address]);
+            expect(ownerPTokenBalanceAfterWithdraw).to.equal(ownerPTokenBalanceBeforeWithdraw + halfAmount, `After withdraw the owner balance should increase by ${halfAmount}`);
+
+            const contractPTokenBalanceAfterWithdraw = await ptokenTLOS.read.balanceOf([redeem.address]);
+            expect(contractPTokenBalanceAfterWithdraw).to.equal(halfAmount, `After withdraw the contract balance should decrease by ${halfAmount}`);
         });
 
     });
