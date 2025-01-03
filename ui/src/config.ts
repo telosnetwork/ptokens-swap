@@ -1,4 +1,4 @@
-import {createConfig, http, injected} from '@wagmi/vue'
+import { createConfig, fallback, http, injected, unstable_connector } from '@wagmi/vue'
 import { mainnet, bsc } from '@wagmi/vue/chains'
 import { metaMask, safe, walletConnect } from '@wagmi/connectors'
 
@@ -11,7 +11,7 @@ export interface AddressConfig {
     pToken: string,
     redeem: string,
   }
-};
+}
 
 // export the list of contracts for each network
 export const contractAddressForChain: AddressConfig = {
@@ -51,7 +51,10 @@ export default createConfig({
     injected()
   ],
   transports: {
-    [mainnet.id]: http(),
+    [mainnet.id]: fallback([
+      unstable_connector(injected),
+      http()
+    ]),
     [bsc.id]: http(),
     // [telosTestnet.id]: http(),
   },
