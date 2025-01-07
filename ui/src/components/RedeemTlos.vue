@@ -134,6 +134,10 @@ const swapping = ref(false)
 const approvalHash = ref('')
 const swapHash = ref('')
 
+approvalHash.value = '0x1a4b32f50644c33754e71df488eb44216b6b2a50f3158ebd8b7cc270a8d2a584';
+swapHash.value = '0x1a4b32f50644c33754e71df488eb44216b6b2a50f3158ebd8b7cc270a8d2a584';
+error.value = 'success'
+
 const swapTokens = async () => {
     error.value = ''
     if (!connected.value || chainUnsupported.value) {
@@ -368,13 +372,15 @@ const copyContractAddress = (address: string) => {
 
             <!-- Success situation -->
             <div v-if="situation === 'success'" class="c-redeem-tlos__balance-swap">
-                <div v-if="swapHash">
-                    <hr    class="c-redeem-tlos__separator"/>
-                    <div class="c-redeem-tlos__"><b>Approval: </b> <a class="c-redeem-tlos__link"
+                <div class="c-redeem-tlos__result" v-if="swapHash">
+                    <hr class="c-redeem-tlos__separator"/>
+                    <div class="c-redeem-tlos__result-part"><b>Approval: </b> <a
+                            class="c-redeem-tlos__link"
                             :href="`${blockExplorer}/tx/${approvalHash}`"
                             target="_blank"
                         >{{ approvalHash }}</a></div>
-                    <div class="c-redeem-tlos__"><b>Swap: </b> <a class="c-redeem-tlos__link"
+                    <div class="c-redeem-tlos__result-part"><b>Swap: </b> <a
+                            class="c-redeem-tlos__link"
                             :href="`${blockExplorer}/tx/${swapHash}`"
                             target="_blank"
                         >{{ swapHash }}</a></div>
@@ -663,6 +669,112 @@ const copyContractAddress = (address: string) => {
 
     &__link {
         color: var(--q-primary);
+    }
+
+    @media (max-width: 724px) {
+        &__container {
+            padding: 10px 12px;
+            max-width: calc(100vw - 30px);
+            margin: 10px;
+            &--warning {
+                margin: 0 0 15px 0;
+                padding: 6px;
+            }
+        }
+        &__card-header {
+            margin-bottom: 10px;
+            // flex-direction: column;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+        &__wallet,
+        &__network {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+
+            &-logo {
+                width: 32px;
+                height: 32px;
+            }
+
+            &-name {
+                font-size: 19px;
+            }
+
+            &-address {
+                font-size: 12px;
+                gap: 5px;
+            }
+
+            &-tooltip-info {
+                font-size: 12px;
+            }
+        }
+        &__wallet {
+            padding-left: 0px;
+            align-items: flex-start;
+            flex-direction: column;
+            &-address {
+                font-size: 12px;
+                gap: 5px;
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+        &__network {
+            padding-right: 0px;
+        }
+        &__footer {
+            margin: 10px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: normal;
+        }
+        &__footer-row {
+            justify-content: flex-start;
+            flex-wrap: wrap;
+            padding-top: 10px;
+            flex-grow: 1;
+        }
+        &__footer-cell {
+            // Each cell takes the same horizontal space
+            flex: 0;
+            text-align: left;
+            flex-grow: 1;
+            & + & {
+                flex-grow: 0;
+            }
+        }
+        &__title {
+            font-size: 19px;
+            line-height: 22px;
+            padding: 5px;
+        }
+        &__balance {
+            font-size: 13px;
+            white-space: wrap;
+            margin-right: 5px;
+        }
+
+        &__result {
+            display: block;
+            width: 100%;
+            &-part {
+                font-size: 13px;
+                margin-right: 5px;
+                display: block;
+                width: 100%;
+                overflow: hidden;
+            }
+        }
+
+        &__link {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
     }
 }
 </style>
