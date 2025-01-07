@@ -12,7 +12,7 @@ const connected = computed(() => isConnected.value && !!address.value)
   <q-header class="c-main-header" elevated>
     <header class="c-main-header-container">
         <img
-            src="/image/telos-circle-logo.svg"
+            src="/branding/telos.png"
             alt="Telos Circle Logo"
             class="c-main-header__logo"
         >
@@ -24,9 +24,6 @@ const connected = computed(() => isConnected.value && !!address.value)
         <div class="c-main-page__background-top">
             <div class="c-main-page__background-circle c-main-page__background-circle--1"></div>
             <div class="c-main-page__background-circle c-main-page__background-circle--2"></div>
-            <!--div class="c-main-page__background-title">
-                tTokens redeem tool page
-            </div-->
         </div>
         <div class="c-main-page__background-bottom">
             <div class="c-main-page__background-subtitle">
@@ -43,15 +40,15 @@ const connected = computed(() => isConnected.value && !!address.value)
 .c-main-header {
     background-color: white;
     color: var(--text-color);
-    padding: 20px;
+    padding: 10px;
     font-size: 24px;
     &-container {
         display: flex;
         align-items: center;
     }
     &__logo {
-        width: 50px;
-        height: 50px;
+        width: 38px;
+        height: 38px;
         margin-right: 10px;
     }
 }
