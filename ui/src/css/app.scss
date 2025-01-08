@@ -7,4 +7,7 @@ body {
     --notify-error: #880000;
     --notify-neutral: #4D4D4D;
     --notify-info: #008888;
+
+    --q-primary: #{$primary};
+    --q-warning: #{$warning};
 }

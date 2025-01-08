@@ -32,6 +32,12 @@ export const contractAddressForChain: AddressConfig = {
   // },
 };
 
+// icon URI for each chain
+export const logoURLforChain: { [chain: string]: string } = {
+  '1': 'branding/eth.png',
+  '56': 'branding/bnb.png',
+  '41': 'branding/Telos-Icon.svg',
+};
 
 // Icon URI for each connector
 export const logoURLforConnector: { [conntector: string]: string } = {
