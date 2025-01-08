@@ -134,9 +134,9 @@ const swapping = ref(false)
 const approvalHash = ref('')
 const swapHash = ref('')
 
-approvalHash.value = '0x1a4b32f50644c33754e71df488eb44216b6b2a50f3158ebd8b7cc270a8d2a584';
-swapHash.value = '0x1a4b32f50644c33754e71df488eb44216b6b2a50f3158ebd8b7cc270a8d2a584';
-error.value = 'success'
+// approvalHash.value = '0x1a4b32f50644c33754e71df488eb44216b6b2a50f3158ebd8b7cc270a8d2a584';
+// swapHash.value = '0x1a4b32f50644c33754e71df488eb44216b6b2a50f3158ebd8b7cc270a8d2a584';
+// error.value = 'success'
 
 const swapTokens = async () => {
     error.value = ''
