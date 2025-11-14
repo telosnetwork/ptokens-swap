@@ -47,6 +47,39 @@ export const logoURLforConnector: { [conntector: string]: string } = {
   'walletconnect': 'image/WalletConnect-icon.svg',
 }
 
+// Chain metadata configuration including optional custom RPC URLs
+export interface ChainMetadata {
+  id: number;
+  name: string;
+  logo: string;
+  customRpcUrl?: string;
+  nativeCurrency: {
+    name: string;
+    symbol: string;
+    decimals: number;
+  };
+  blockExplorerUrl: string;
+}
+
+export const chainConfigurations: { [chainId: number]: ChainMetadata } = {
+  [mainnet.id]: {
+    id: mainnet.id,
+    name: 'Ethereum',
+    logo: 'branding/eth.png',
+    customRpcUrl: 'https://mainnet.infura.io',
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    blockExplorerUrl: 'https://etherscan.io'
+  },
+  [bsc.id]: {
+    id: bsc.id,
+    name: 'BNB',
+    logo: 'branding/bnb.png',
+    customRpcUrl: 'https://bsc.nodereal.io',
+    nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+    blockExplorerUrl: 'https://bscscan.com'
+  }
+}
+
 export default createConfig({
   // chains: [mainnet, bsc, telosTestnet],
   chains: [mainnet, bsc],

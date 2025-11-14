@@ -2,7 +2,7 @@
 import { type Address, formatUnits, parseEther } from 'viem'
 import type { Ref } from 'vue';
 import { ref, computed, watch } from 'vue'
-import { useConfig, useReadContract, useDisconnect, useAccount, useWriteContract, type UseReadContractReturnType } from '@wagmi/vue'
+import { useConfig, useReadContract, useAccount, useWriteContract, type UseReadContractReturnType } from '@wagmi/vue'
 import { waitForTransactionReceipt } from '@wagmi/core'
 
 import RedeemABI from 'src/contracts/RedeemPTokenTLOS.json'
@@ -10,10 +10,9 @@ import ERC20ABI from 'src/contracts/MockERC20.json'
 import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
-const { disconnect } = useDisconnect()
 const { chain, address, isConnected } = useAccount()
 const { writeContractAsync } = useWriteContract()
-import { contractAddressForChain, logoURLforChain } from 'src/config'
+import { contractAddressForChain } from 'src/config'
 const config = useConfig()
 const error = ref('')
 const copiedAddress = ref('')
@@ -33,14 +32,6 @@ const loaded =  computed(() => {
 
 const connected = computed(() => isConnected.value && !!address.value)
 const chainUnsupported = ref(false);
-const chainName = computed(() => {
-    if (chain.value) {
-        return chain.value.name + (chain.value.testnet ? ' Testnet' : '')
-    }
-    return ''
-})
-
-
 
 const blockExplorer = computed(() => {
     let domain = '';
@@ -228,11 +219,6 @@ const situation: Ref<Situation> = computed(() => {
     return 'unsupported'
 });
 
-const prettyAddress = computed(() => {
-    if (!address.value) return '';
-    return `${address.value.slice(0, 6)}...${address.value.slice(-4)}`;
-})
-
 const openContractInExplorer = (address: string) => {
     if (!blockExplorer.value) return;
     window.open(`${blockExplorer.value}/address/${address}?tab=contract`, '_blank')
@@ -251,56 +237,6 @@ const copyContractAddress = (address: string) => {
 <template>
     <q-card class="c-redeem-tlos">
         <div class="c-redeem-tlos__container">
-            <!-- Header: network selected + user address + disconnect button -->
-            <div
-                v-if="connected"
-                class="c-redeem-tlos__card-header"
-            >
-                <div
-                    v-if="chainUnsupported"
-                    class="c-redeem-tlos__network"
-                >
-                    <!-- info icone -->
-                    <q-icon name="info" size="md" />
-                    <span> Unsupported Network </span>
-                </div>
-                <div
-                    v-else
-                    class="c-redeem-tlos__network"
-                >
-                    <img
-                        :src="`${logoURLforChain[chain?.id || 0]}`"
-                        alt="Chain Logo"
-                        class="c-redeem-tlos__network-logo"
-                    >
-                    <span class="c-redeem-tlos__network-name">
-                        {{ chainName }}
-                    </span>
-                </div>
-                <div class="c-redeem-tlos__wallet">
-                    <div class="c-redeem-tlos__wallet-address">
-                        <b>Connected as:</b>
-                        <a class="c-redeem-tlos__link"
-                            :href="`${blockExplorer}/address/${address}`"
-                            target="_blank"
-                        >{{ prettyAddress }}</a>
-
-                        <q-tooltip>
-                            <span class="c-redeem-tlos__wallet-tooltip-info">
-                                <b>Explore:</b> {{ address }}
-                            </span>
-                        </q-tooltip>
-                    </div>
-                    <q-btn
-                        @click="disconnect()"
-                        color="negative"
-                        icon="logout"
-                        class="c-redeem-tlos__wallet-disconnect-btn"
-                        size="sm"
-                    />
-                </div>
-            </div>
-
             <div
                 v-if="
                     situation === 'success' ||
@@ -542,50 +478,12 @@ const copyContractAddress = (address: string) => {
         justify-content: center;
     }
 
-    &__card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 40px;
-    }
-
-    &__wallet {
-        padding-left: 50px;
-    }
-    &__network {
-        padding-right: 50px;
-    }
     &__column-centered {
         display: flex;
         flex-direction: column;
         align-items: center;
     }
 
-    &__wallet,
-    &__network {
-        display: flex;
-        gap: 15px;
-        align-items: center;
-
-        &-logo {
-            width: 50px;
-            height: 50px;
-        }
-
-        &-name {
-            font-size: 24px;
-        }
-
-        &-address {
-            font-size: 14px;
-            display: flex;
-            gap: 5px;
-        }
-
-        &-tooltip-info {
-            font-size: 16px;
-        }
-    }
     &__title {
         font-size: 24px;
         line-height: 36px;
@@ -680,50 +578,6 @@ const copyContractAddress = (address: string) => {
                 margin: 0 0 15px 0;
                 padding: 6px;
             }
-        }
-        &__card-header {
-            margin-bottom: 10px;
-            // flex-direction: column;
-            align-items: flex-start;
-            justify-content: space-between;
-        }
-        &__wallet,
-        &__network {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-
-            &-logo {
-                width: 32px;
-                height: 32px;
-            }
-
-            &-name {
-                font-size: 19px;
-            }
-
-            &-address {
-                font-size: 12px;
-                gap: 5px;
-            }
-
-            &-tooltip-info {
-                font-size: 12px;
-            }
-        }
-        &__wallet {
-            padding-left: 0px;
-            align-items: flex-start;
-            flex-direction: column;
-            &-address {
-                font-size: 12px;
-                gap: 5px;
-                align-items: flex-start;
-                flex-direction: column;
-            }
-        }
-        &__network {
-            padding-right: 0px;
         }
         &__footer {
             margin: 10px 0;
