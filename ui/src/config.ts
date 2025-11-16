@@ -74,11 +74,11 @@ export const chainConfigurations: { [chainId: number]: ChainMetadata } = {
     id: bsc.id,
     name: 'BNB',
     logo: 'branding/bnb.png',
-    customRpcUrl: 'https://bsc.nodereal.io',
+    customRpcUrl: 'https://bsc-dataseed.binance.org',
     nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
     blockExplorerUrl: 'https://bscscan.com'
   }
-}
+} as const
 
 export default createConfig({
   // chains: [mainnet, bsc, telosTestnet],
@@ -92,10 +92,14 @@ export default createConfig({
   transports: {
     [mainnet.id]: fallback([
       unstable_connector(injected),
-      http()
+      http(chainConfigurations[mainnet.id]?.customRpcUrl)
     ]),
-    [bsc.id]: http(),
-    // [telosTestnet.id]: http(),
+
+    [bsc.id]: fallback([
+      unstable_connector(injected),
+      http(chainConfigurations[bsc.id]?.customRpcUrl),
+    ]),
+    // [telosTestnet.id]: http(chainConfigurations[telosTestnet.id]?.customRpcUrl),
   },
 })
 

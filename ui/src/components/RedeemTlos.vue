@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { type Address, formatUnits, parseEther } from 'viem'
 import type { Ref } from 'vue';
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, unref } from 'vue'
 import { useConfig, useReadContract, useAccount, useWriteContract, type UseReadContractReturnType } from '@wagmi/vue'
 import { waitForTransactionReceipt } from '@wagmi/core'
 
@@ -80,8 +80,6 @@ const pTokenBalance = computed(() => formatOrZero(pTokenBalanceCall))
 const oftTokenBalance = computed(() => formatOrZero(oftTokenBalanceCall))
 const redeemableOftBalance = computed(() => formatOrZero(redeemableOftBalanceCall))
 
-console.log(oftTokenBalance); // FIXME: remove this line
-
 // maximum amount that can be redeemed
 const maximumRedeemable = computed(() => {
     let result = '0.0';
@@ -114,11 +112,19 @@ watch(chain, handleOnChainChanged, { immediate: true })
 
 
 const formatOrZero = (value: UseReadContractReturnType) => {
-    if (!value || !value.isFetched || !value.data || !value.data.value) {
+    // Unwrap all reactive values
+    const isSuccess = unref(value?.isSuccess)
+    const data = unref(value?.data)
+
+    if (!value || !isSuccess) {
         return '0.0'
     }
 
-    return formatUnits(value.data.value as bigint, 18)
+    if (data === undefined || data === null) {
+        return '0.0'
+    }
+
+    return formatUnits(data as bigint, 18)
 }
 
 const swapping = ref(false)
